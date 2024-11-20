@@ -1,9 +1,8 @@
-from flask import Flask, render_template, jsonify, Response, request
+from flask import Flask, render_template, jsonify, Response
 import azure.cognitiveservices.speech as speechsdk
 import os
 from dotenv import load_dotenv
 import queue
-import threading
 import json
 
 load_dotenv()
@@ -73,15 +72,11 @@ def stream():
             try:
                 if not is_translating:
                     break
-                # Try to get a translation from the queue with a timeout
                 translation = translation_queue.get(timeout=0.1)
                 yield f"data: {json.dumps({'translation': translation})}\n\n"
             except queue.Empty:
                 continue
     return Response(generate(), mimetype='text/event-stream')
-
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
