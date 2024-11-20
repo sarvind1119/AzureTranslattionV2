@@ -1,6 +1,4 @@
-azure-cognitiveservices-speech
-tk
-tkinterweb==3.9
-pywin32==305
-flask
-python-dotenv
+Flask==2.0.1
+python-dotenv==0.19.0
+azure-cognitiveservices-speech==1.41.1
+gunicorn==20.1.0
