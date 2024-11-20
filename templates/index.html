@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Speech Translation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        select, button {
+            width: 200px;
+            padding: 5px;
+            margin: 5px;
+        }
+        #translationDisplay {
+            width: 600px;
+            height: 300px;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+            padding: 10px;
+            text-align: left;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: Helvetica;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <label>Select Input Language:</label>
+        <select id="inputLanguage">
+            <option value="hi-IN">Hindi (India)</option>
+        </select>
+
+        <label>Select Output Language:</label>
+        <select id="outputLanguage">
+            <option value="en">English (Text)</option>
+        </select>
+
+        <label>Select Font Size:</label>
+        <select id="fontSize">
+            <option value="12">12</option>
+            <option value="14">14</option>
+            <option value="16">16</option>
+            <option value="18">18</option>
+            <option value="20">20</option>
+            <option value="24">24</option>
+            <option value="28">28</option>
+            <option value="32">32</option>
+            <option value="36">36</option>
+            <option value="40">40</option>
+        </select>
+
+        <button id="startButton">Start Translation</button>
+        <button id="stopButton" disabled>End Translation</button>
+
+        <div id="translationDisplay"></div>
+    </div>
+
+    <script>
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const translationDisplay = document.getElementById('translationDisplay');
+        const fontSizeSelect = document.getElementById('fontSize');
+        let eventSource = null;
+
+        fontSizeSelect.addEventListener('change', function() {
+            translationDisplay.style.fontSize = this.value + 'px';
+        });
+
+        startButton.addEventListener('click', async function() {
+            startButton.disabled = true;
+            stopButton.disabled = false;
+
+            // Start translation
+            await fetch('/start_translation', { method: 'POST' });
+
+            // Setup SSE connection
+            eventSource = new EventSource('/stream');
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.translation) {
+                    translationDisplay.innerHTML += data.translation + '\n';
+                    translationDisplay.scrollTop = translationDisplay.scrollHeight;
+                }
+            };
+        });
+
+        stopButton.addEventListener('click', async function() {
+            startButton.disabled = false;
+            stopButton.disabled = true;
+
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            await fetch('/stop_translation', { method: 'POST' });
+        });
+
+        // Set initial font size
+        translationDisplay.style.fontSize = fontSizeSelect.value + 'px';
+    </script>
+</body>
+</html>

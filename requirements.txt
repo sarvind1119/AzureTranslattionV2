@@ -1,0 +1,6 @@
+azure-cognitiveservices-speech
+tk
+tkinterweb==3.9
+pywin32==305
+flask
+python-dotenv
